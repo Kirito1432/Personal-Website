@@ -61,4 +61,73 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Contact Form Handling with Google Sheets Integration
+    const contactForm = document.getElementById('contactForm');
+    const formMessage = document.getElementById('formMessage');
+    
+    // Replace this URL with your Google Apps Script Web App URL
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxRTfzPnQTu32NO-eUMCRS_VSHh4Xde2eJDsARvHEXJ5a_OAKdh3KG8lIGACeDnHmNQ/exec';
+    
+    if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = contactForm.querySelector('.submit-btn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-block';
+            formMessage.style.display = 'none';
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('email', email);
+                formData.append('message', message);
+                formData.append('timestamp', new Date().toISOString());
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // Show success message
+                    showFormMessage('Thank you! Your message has been sent successfully.', 'success');
+                    contactForm.reset();
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showFormMessage('Sorry, there was an error sending your message. Please try again later.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline-block';
+                btnLoading.style.display = 'none';
+            }
+        });
+    }
+    
+    function showFormMessage(message, type) {
+        formMessage.textContent = message;
+        formMessage.className = `form-message ${type}`;
+        formMessage.style.display = 'block';
+        
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 5000);
+        }
+    }
 });
